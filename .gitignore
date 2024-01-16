@@ -1,0 +1,6 @@
+*.pth
+*.jpg
+*.pt
+*.png
+*.safetensors
+*.bin
