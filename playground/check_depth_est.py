@@ -160,10 +160,6 @@ if __name__=="__main__":
         recovered_depth_normalized = vae.decode(latents_recovered).sample
         
         
-        
-        
-
-        
         recovered_denoise = de_normalization(resized_left_disp.squeeze(0).permute(1,2,0).cpu().numpy(),recovered_depth_normalized.squeeze(0).permute(1,2,0).cpu().numpy())
 
         print(np.mean(np.abs(recovered_denoise-resized_left_disp.squeeze(0).permute(1,2,0).cpu().numpy())))

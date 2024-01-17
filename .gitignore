@@ -4,3 +4,5 @@
 *.png
 *.safetensors
 *.bin
+*.pyc
+outputs
