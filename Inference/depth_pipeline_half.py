@@ -61,6 +61,8 @@ class DepthEstimationPipeline(DiffusionPipeline):
         )
         self.empty_text_embed = None
         
+        # self.current_dtype = torch.float16
+        
         
     
     
@@ -109,6 +111,8 @@ class DepthEstimationPipeline(DiffusionPipeline):
         rgb_norm = rgb / 255.0
         rgb_norm = torch.from_numpy(rgb_norm).to(self.dtype)
         rgb_norm = rgb_norm.to(device)
+        
+        rgb_norm = rgb_norm.half()
         
 
         assert rgb_norm.min() >= 0.0 and rgb_norm.max() <= 1.0
@@ -213,7 +217,7 @@ class DepthEstimationPipeline(DiffusionPipeline):
         text_input_ids = text_inputs.input_ids.to(self.text_encoder.device) #[1,2]
         # print(text_input_ids.shape)
         self.empty_text_embed = self.text_encoder(text_input_ids)[0].to(self.dtype) #[1,2,1024]
-
+        self.empty_text_embed = self.empty_text_embed.half()
 
         
     @torch.no_grad()
@@ -236,6 +240,8 @@ class DepthEstimationPipeline(DiffusionPipeline):
         depth_latent = torch.randn(
             rgb_latent.shape, device=device, dtype=self.dtype
         )  # [B, 4, H/8, W/8]
+        
+        depth_latent = depth_latent.half()
         
         
         # Batched empty text embedding
@@ -317,6 +323,8 @@ class DepthEstimationPipeline(DiffusionPipeline):
         """
         # scale latent
         depth_latent = depth_latent / self.depth_latent_scale_factor
+        
+        depth_latent = depth_latent.half()
         # decode
         z = self.vae.post_quant_conv(depth_latent)
         stacked = self.vae.decoder(z)

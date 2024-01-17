@@ -10,7 +10,7 @@ trainlist='/home/zliu/ECCV2024/Accelerator-Simple-Template/datafiles/sceneflow/S
 vallist='/home/zliu/ECCV2024/Accelerator-Simple-Template/datafiles/sceneflow/FlyingThings3D_Test_With_Occ.list'
 output_dir='../outputs/sceneflow_fine_tune'
 train_batch_size=1
-num_train_epochs=70
+num_train_epochs=10
 gradient_accumulation_steps=4
 learning_rate=1e-5
 lr_warmup_steps=0
@@ -31,7 +31,8 @@ CUDA_VISIBLE_DEVICES=0,1 accelerate launch --mixed_precision="fp16"  --multi_gpu
                   --lr_warmup_steps $lr_warmup_steps \
                   --dataloader_num_workers $dataloader_num_workers \
                   --tracker_project_name $tracker_project_name \
-                  --gradient_checkpointing
+                  --gradient_checkpointing \
+                  --enable_xformers_memory_efficient_attention \
 
 }
 

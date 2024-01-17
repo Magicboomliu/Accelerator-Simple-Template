@@ -201,12 +201,9 @@ if __name__=="__main__":
     # -------------------- Inference and saving --------------------
     with torch.no_grad():
         os.makedirs(output_dir, exist_ok=True)
-        
         # load the example image.
         input_image_pil = Image.open(input_image_path)
-        
-        input_image_pil.save("input_image.png")
-        
+        # input_image_pil.save("input_image.png")
         # predict the depth here
         pipe_out = pipe(input_image_pil,
              denosing_steps=denoise_steps,
