@@ -171,7 +171,7 @@ if __name__=="__main__":
     else:
         
         vae = AutoencoderKL.from_pretrained(stable_diffusion_repo_path,subfolder='vae')
-        scheduler = DDIMScheduler.from_pretrained(checkpoint_path,subfolder='scheduler')
+        scheduler = DDIMScheduler.from_pretrained(stable_diffusion_repo_path,subfolder='scheduler')
         text_encoder = CLIPTextModel.from_pretrained(stable_diffusion_repo_path,subfolder='text_encoder')
         tokenizer = CLIPTokenizer.from_pretrained(stable_diffusion_repo_path,subfolder='tokenizer')
         
