@@ -1,6 +1,7 @@
 # Accelerator-Simple-Template
 This is a simple template using HuggingFace Accelerator for DDP-training/Saving/Loading/Pushing. 
 
+For Monodepth estimation:[Marigold], please refer to `depth_est_diff` branch
 
 ## Train the Model
 ```
