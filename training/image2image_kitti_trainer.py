@@ -47,7 +47,9 @@ import accelerate
 
 import sys
 sys.path.append("..")
-from training.dataset_configuration import prepare_dataset,Disparity_Normalization,resize_max_res_tensor
+
+from training.dataset_configuration import resize_max_res_tensor
+from kitti_dataset_configuration import prepare_dataset
 
 from Inference.image_pipeline_half import DepthEstimationPipeline
 # from Inference.depth_pipeline import DepthEstimationPipeline
@@ -61,7 +63,7 @@ import  matplotlib.pyplot as plt
 
 
 def log_validation(vae,text_encoder,tokenizer,unet,args,accelerator,weight_dtype,scheduler,epoch,
-                   input_image_path="/media/zliu/data12/dataset/sceneflow/frames_cleanpass/flythings3d/TEST/A/0000/left/0006.png"
+                   input_image_path="/media/zliu/data12/dataset/KITTI/KITTI_Raw/2011_09_26/2011_09_26_drive_0056_sync/image_02/data/0000000058.png"
                    ):
     
     denoise_steps = 10
@@ -539,13 +541,16 @@ def main():
         eps=args.adam_epsilon,
     )
     with accelerator.main_process_first():
-        (train_loader,test_loader), dataset_config_dict = prepare_dataset(data_name=args.dataset_name,
-                                                                      datapath=args.dataset_path,
-                                                                      trainlist=args.trainlist,
-                                                                      vallist=args.vallist,batch_size=args.train_batch_size,
-                                                                      test_batch=1,
-                                                                      datathread=args.dataloader_num_workers,
-                                                                      logger=logger)
+
+        (train_loader,test_loader), num_batches_per_epoch = prepare_dataset(
+                                                            datathread=4,
+                                                            datapath=args.dataset_path,
+                                                            trainlist=args.trainlist,
+                                                            vallist=args.vallist,
+                                                            batch_size=args.train_batch_size,
+                                                            test_size=1,
+                                                            logger=logger)
+        
 
     # because the optimizer not optimized every time, so we need to calculate how many steps it optimizes,
     # it is usually optimized by 
@@ -674,8 +679,11 @@ def main():
         for step, batch in enumerate(train_loader):
             with accelerator.accumulate(unet):
                 # convert the images and the depths into lantent space.
-                left_image_data = batch['img_left']
-                right_image_data = batch['img_right']
+                # left_image_data = batch['img_left']
+                # right_image_data = batch['img_right']
+
+                left_image_data = batch['left_image']
+                right_image_data = batch['right_image']
               
             
                 left_image_data_resized = resize_max_res_tensor(left_image_data,is_disp=False) #range in (0-1)
@@ -856,6 +864,9 @@ def main():
     accelerator.end_training()
     
     
+    
+        
+        
     
 
 

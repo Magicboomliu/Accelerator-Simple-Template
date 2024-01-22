@@ -56,7 +56,7 @@ class DepthEstimationPipeline(DiffusionPipeline):
     def __call__(self,
                  input_image:Image,
                  denosing_steps: int =10,
-                 ensemble_size: int =10,
+                 ensemble_size: int =1,
                  processing_res: int = 768,
                  match_input_res:bool =True,
                  batch_size:int =0,
@@ -98,7 +98,6 @@ class DepthEstimationPipeline(DiffusionPipeline):
         rgb_norm = torch.from_numpy(rgb_norm).to(self.dtype)
         rgb_norm = rgb_norm.to(device)
         
-        rgb_norm = rgb_norm.half()
         
         
 
@@ -117,8 +116,6 @@ class DepthEstimationPipeline(DiffusionPipeline):
         
         single_rgb_loader = DataLoader(single_rgb_dataset,batch_size=_bs,shuffle=False)
         
-        # predicted the depth
-        depth_pred_ls = []
         
         if show_progress_bar:
             iterable_bar = tqdm(
@@ -134,12 +131,12 @@ class DepthEstimationPipeline(DiffusionPipeline):
                 num_inference_steps=denosing_steps,
                 show_pbar=show_progress_bar,
             )
-            depth_pred_ls.append(depth_pred_raw.detach().clone())
         
-        depth_preds = torch.concat(depth_pred_ls, axis=0).squeeze() #(10,224,768)
+        depth_pred = depth_pred_raw
+
+        
         torch.cuda.empty_cache()  # clear vram cache for ensembling
         
-        depth_pred = depth_preds[0]
         
         depth_pred = depth_pred.squeeze(0).permute(1,2,0).cpu().numpy().astype(np.float32)
         
@@ -148,9 +145,6 @@ class DepthEstimationPipeline(DiffusionPipeline):
         if match_input_res:
             # print(depth_pred.shape)
             depth_pred = cv2.resize(depth_pred,input_size)
-            # pred_img = Image.fromarray(depth_pred)
-            # pred_img = pred_img.resize(input_size)
-            # depth_pred = np.asarray(pred_img)
 
         # Clip output range: current size is the original size
         depth_pred = depth_pred.clip(0, 1)
@@ -174,7 +168,7 @@ class DepthEstimationPipeline(DiffusionPipeline):
         text_input_ids = text_inputs.input_ids.to(self.text_encoder.device) #[1,2]
         # print(text_input_ids.shape)
         self.empty_text_embed = self.text_encoder(text_input_ids)[0].to(self.dtype) #[1,2,1024]
-        self.empty_text_embed = self.empty_text_embed.half()
+
 
         
     @torch.no_grad()
@@ -197,8 +191,7 @@ class DepthEstimationPipeline(DiffusionPipeline):
         depth_latent = torch.randn(
             rgb_latent.shape, device=device, dtype=self.dtype
         )  # [B, 4, H/8, W/8]
-        
-        depth_latent = depth_latent.half()
+
         
         
         # Batched empty text embedding
@@ -282,7 +275,7 @@ class DepthEstimationPipeline(DiffusionPipeline):
         # scale latent
         depth_latent = depth_latent / self.depth_latent_scale_factor
         
-        depth_latent = depth_latent.half()
+
         # decode
         z = self.vae.post_quant_conv(depth_latent)
         stacked = self.vae.decoder(z)
